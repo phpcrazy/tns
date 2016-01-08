@@ -9,7 +9,11 @@ class DB extends PDO
 {
 
     private static $_instance = null;
-    private $table_name;
+    private $_table_name;
+    private $_where_key;
+    private $_where_sign;
+    private $_where_value;
+    private $_is_where = false;
 
     private $engine;
     private $host;
@@ -32,13 +36,35 @@ class DB extends PDO
             self::$_instance = new DB();
         }
 
-        self::$_instance->table_name = $table_name;
+        self::$_instance->_table_name = $table_name;
 
         return self::$_instance;
     }
 
+    public function where($key, $sign, $value) {
+
+        $this->_where_key = $key;
+        $this->_is_where = true;
+        $this->_where_sign = $sign;
+        $this->_where_value = $value;
+
+        return $this;
+    }
+
     public function get() {
-        $sql = "SELECT * FROM " . $this->table_name;
+
+        // SELECT * FROM products WHERE id = 1
+
+        if($this->_is_where == true) {
+            $sql = "SELECT * FROM " . $this->_table_name . " WHERE " .
+                $this->_where_key . $this->_where_sign . $this->_where_value;
+            $this->_is_where = false;
+            $this->_where_key = null;
+            $this->_where_sign = null;
+            $this->_where_value = null;
+        } else {
+            $sql = "SELECT * FROM " . $this->_table_name;
+        }
         $result = $this->query($sql);
         return $result->fetchAll();
     }
